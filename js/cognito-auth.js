@@ -59,7 +59,9 @@ var WildRydes = window.WildRydes || {};
         };
         var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
 
-        userPool.signUp(toUsername(email), password, [attributeEmail], null,
+        // Use email directly as username if your User Pool is configured for email as username
+        // Otherwise, keep the toUsername function
+        userPool.signUp(email, password, [attributeEmail], null,
             function signUpCallback(err, result) {
                 if (!err) {
                     onSuccess(result);
@@ -72,7 +74,7 @@ var WildRydes = window.WildRydes || {};
 
     function signin(email, password, onSuccess, onFailure) {
         var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-            Username: toUsername(email),
+            Username: email,  // Use email directly
             Password: password
         });
 
@@ -95,14 +97,15 @@ var WildRydes = window.WildRydes || {};
 
     function createCognitoUser(email) {
         return new AmazonCognitoIdentity.CognitoUser({
-            Username: toUsername(email),
+            Username: email,  // Use email directly
             Pool: userPool
         });
     }
 
-    function toUsername(email) {
-        return email.replace('@', '-at-');
-    }
+    // Remove or comment out this function if using email as username
+    // function toUsername(email) {
+    //     return email.replace('@', '-at-');
+    // }
 
     /*
      *  Event Handlers
@@ -124,7 +127,7 @@ var WildRydes = window.WildRydes || {};
                 window.location.href = 'ride.html';
             },
             function signinError(err) {
-                alert(err);
+                alert(err.message || JSON.stringify(err));
             }
         );
     }
@@ -137,14 +140,16 @@ var WildRydes = window.WildRydes || {};
         var onSuccess = function registerSuccess(result) {
             var cognitoUser = result.user;
             console.log('user name is ' + cognitoUser.getUsername());
-            var confirmation = ('Registration successful. Please check your email inbox or spam folder for your verification code.');
-            if (confirmation) {
-                window.location.href = 'verify.html';
-            }
+            var confirmation = 'Registration successful. Please check your email inbox or spam folder for your verification code.';
+            alert(confirmation);
+            // Redirect to verify page
+            window.location.href = 'verify.html';
         };
+        
         var onFailure = function registerFailure(err) {
-            alert(err);
+            alert(err.message || JSON.stringify(err));
         };
+        
         event.preventDefault();
 
         if (password === password2) {
@@ -166,7 +171,7 @@ var WildRydes = window.WildRydes || {};
                 window.location.href = signinUrl;
             },
             function verifyError(err) {
-                alert(err);
+                alert(err.message || JSON.stringify(err));
             }
         );
     }
